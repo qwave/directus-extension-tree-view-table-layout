@@ -126,6 +126,12 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 			tableSpacing,
 		} = useTable();
 
+		const allowItemReorder = syncRefProperty(
+			layoutOptions,
+			'allowItemReorder',
+			true,
+		);
+
 		const showingCount = computed(() => {
 			// Don't show count if there are no items
 			if (!totalCount.value || !itemCount.value)
@@ -165,6 +171,7 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 			activeFields,
 			tableSpacing,
 			parentField,
+			allowItemReorder,
 			primaryKeyField,
 			info,
 			showingCount,

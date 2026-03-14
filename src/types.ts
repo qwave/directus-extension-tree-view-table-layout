@@ -9,6 +9,7 @@ export interface LayoutOptions {
 	limit?: number;
 	spacing?: 'comfortable' | 'cozy' | 'compact';
 	parent?: string | null;
+	allowItemReorder?: boolean;
 }
 
 export interface LayoutQuery {

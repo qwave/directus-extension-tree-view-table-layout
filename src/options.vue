@@ -11,6 +11,7 @@ interface Props {
 	activeFields: Field[];
 	tableSpacing: 'compact' | 'cozy' | 'comfortable';
 	parentField: string | null;
+	allowItemReorder: boolean;
 	sortField: string;
 	collection: string;
 	fieldsInCollection: any;
@@ -22,6 +23,7 @@ const props = defineProps<Props>();
 const emit = defineEmits([
 	'update:tableSpacing',
 	'update:parentField',
+	'update:allowItemReorder',
 	'update:activeFields',
 	'update:fields',
 ]);
@@ -30,6 +32,7 @@ const { t } = useI18n();
 
 const tableSpacingWritable = useSync(props, 'tableSpacing', emit);
 const parentFieldWritable = useSync(props, 'parentField', emit);
+const allowItemReorderWritable = useSync(props, 'allowItemReorder', emit);
 
 const selfReferencingM2oFields = computed(() => {
 	return props.fieldsInCollection?.filter(
@@ -95,6 +98,13 @@ const selfReferencingM2oFields = computed(() => {
 				/>
 				button to enable manual sorting!</small>
 		</template>
+	</div>
+
+	<div class="field">
+		<v-checkbox
+			v-model="allowItemReorderWritable"
+			label="Allow item reorder"
+		/>
 	</div>
 
 	<div class="field">

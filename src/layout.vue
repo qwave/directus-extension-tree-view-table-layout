@@ -79,6 +79,7 @@ interface Props {
 	onSortChange: (newSort: { by: string; desc: boolean }) => void;
 	onAlignChange?: (field: 'string', align: 'left' | 'center' | 'right') => void;
 	parentField: string | null;
+	allowItemReorder: boolean;
 	saveEdits: (edits: Record<PrimaryKey, Item>) => void;
 	isFiltered: boolean;
 }
@@ -182,6 +183,7 @@ function removeField(fieldKey: string) {
 			:item-key="primaryKeyField?.field"
 			:show-manual-sort="sortAllowed && !isFiltered"
 			:manual-sort-key="sortField"
+			:allow-item-reorder="allowItemReorder"
 			allow-header-reorder
 			selection-use-keys
 			:parent-field

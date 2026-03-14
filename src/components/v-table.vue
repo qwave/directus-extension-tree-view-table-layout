@@ -35,6 +35,7 @@ const props = withDefaults(
 		showSelect?: ShowSelect;
 		showResize?: boolean;
 		showManualSort?: boolean;
+		allowItemReorder?: boolean;
 		manualSortKey?: string;
 		allowHeaderReorder?: boolean;
 		modelValue?: any[];
@@ -57,6 +58,7 @@ const props = withDefaults(
 		showSelect: 'none',
 		showResize: false,
 		showManualSort: false,
+		allowItemReorder: true,
 		manualSortKey: undefined,
 		allowHeaderReorder: false,
 		modelValue: () => [],
@@ -146,6 +148,9 @@ const internalSort = computed<Sort>(
 );
 
 const reordering = ref<boolean>(false);
+const showManualSortControl = computed(
+	() => props.showManualSort && props.allowItemReorder,
+);
 
 const hasHeaderAppendSlot = computed(
 	() => slots['header-append'] !== undefined,
@@ -190,23 +195,49 @@ function onItemSelected(event: ItemSelectEvent) {
 	emit('item-selected', event);
 
 	let selection = clone(props.modelValue) as any[];
+	const descendantIds = event.item[childrenKey] ?? [];
+	const descendantItems = internalItems.value.filter((item) =>
+		descendantIds.includes(item[props.itemKey]),
+	);
 
 	if (event.value === true) {
 		if (props.selectionUseKeys) {
 			selection.push(event.item[props.itemKey]);
+			selection.push(
+				...descendantItems.map((item) => item[props.itemKey]),
+			);
 		}
 		else {
 			selection.push(event.item);
+			selection.push(...descendantItems);
 		}
 	}
 	else {
 		selection = selection.filter((item) => {
 			if (props.selectionUseKeys) {
-				return item !== event.item[props.itemKey];
+				return (
+					item !== event.item[props.itemKey]
+					&& !descendantIds.includes(item)
+				);
 			}
 
-			return item[props.itemKey] !== event.item[props.itemKey];
+			return (
+				item[props.itemKey] !== event.item[props.itemKey]
+				&& !descendantIds.includes(item[props.itemKey])
+			);
 		});
+	}
+
+	if (props.selectionUseKeys) {
+		selection = [...new Set(selection)];
+	}
+	else {
+		selection = selection.filter(
+			(item, index, array) =>
+				array.findIndex(
+					(entry) => entry[props.itemKey] === item[props.itemKey],
+				) === index,
+		);
 	}
 
 	if (props.showSelect === 'one') {
@@ -286,7 +317,7 @@ const columnStyle = computed<{ header: string; rows: string }>(() => {
 		if (props.showSelect !== 'none')
 			controlColumnWidth += controlIconWidth;
 
-		if (props.showManualSort)
+		if (showManualSortControl.value)
 			controlColumnWidth += controlIconWidth;
 
 		// eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -654,7 +685,7 @@ function useTreeView({
 				:some-items-selected="someItemsSelected"
 				:all-items-selected="allItemsSelected"
 				:fixed="fixedHeader"
-				:show-manual-sort="showManualSort"
+				:show-manual-sort="showManualSortControl"
 				:must-sort="mustSort"
 				:has-item-append-slot="hasItemAppendSlot"
 				:manual-sort-key="manualSortKey"
@@ -736,7 +767,7 @@ function useTreeView({
 					:item-depth
 					:item-parent="!!parentField ? itemParent : null"
 					:snap-step="controlIconWidth"
-					:disabled="disabled || !sortIsManual"
+					:disabled="disabled || !sortIsManual || !allowItemReorder"
 					@manual-sort="onSortUpdate"
 				>
 					<TableRow
@@ -748,7 +779,7 @@ function useTreeView({
 						:collapsed="!!item[collapsedParentsKey]?.length"
 						:headers="internalHeaders"
 						:show-select="disabled ? 'none' : showSelect"
-						:show-manual-sort="!disabled && showManualSort"
+						:show-manual-sort="!disabled && showManualSortControl"
 						:is-selected="getSelectedState(item)"
 						:subdued="loading || reordering"
 						:sorted-manually="sortIsManual"
